@@ -33,8 +33,7 @@
       "metadata": {
         "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version. Allowed values: 2008-R2-SP1, 2012-Datacenter, 2012-R2-Datacenter."
       }
-    },
-    "iomegavmName": { "type": "string" }
+    }
   },
   "variables": {
     "imagePublisher": "MicrosoftWindowsServer",
@@ -43,12 +42,12 @@
     "nicName": "myVMNic",
     "addressPrefix": "192.168.0.0/16",
     "subnetName": "Subnet",
-    "subnetPrefix": "192.168.1.0/24",
+    "subnetPrefix": "10.0.0.0/24",
     "vhdStorageType": "Standard_LRS",
     "publicIPAddressName": "myPublicIP",
     "publicIPAddressType": "Dynamic",
     "vhdStorageContainerName": "vhds",
-    "vmName": "[parameters('iomegavmName')]",
+    "vmName": "MyWindowsVM",
     "vmSize": "Standard_A2",
     "virtualNetworkName": "MyVNET",
     "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
