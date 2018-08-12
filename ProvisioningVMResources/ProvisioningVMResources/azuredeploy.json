@@ -1,0 +1,231 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageName": { "type": "string" },
+    "vnetName": { "type": "string" },
+    "iomegastorageType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    },
+    "iomeganetworkinterfaceName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "iomegapublicipDnsName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "iomegavmName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "iomegavmAdminUserName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "iomegavmAdminPassword": {
+      "type": "securestring"
+    },
+    "iomegavmWindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2012-R2-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "Windows-Server-Technical-Preview"
+      ]
+    }
+  },
+  "variables": {
+    "iomegastorageName": "[parameters('storageName')]",
+    "iomegavnetPrefix": "192.168.0.0/16",
+    "iomegavnetSubnet1Name": "Subnet-1",
+    "iomegavnetSubnet1Prefix": "192.168.0.0/24",
+    "iomegavnetSubnet2Name": "Subnet-2",
+    "iomegavnetSubnet2Prefix": "192.168.1.0/24",
+    "iomeganetworkinterfaceVnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+    "iomeganetworkinterfaceSubnetRef": "[concat(variables('iomeganetworkinterfaceVnetID'), '/subnets/', variables('iomegavnetSubnet1Name'))]",
+    "iomegapublicipName": "iomegapublicip",
+    "iomegavmImagePublisher": "MicrosoftWindowsServer",
+    "iomegavmImageOffer": "WindowsServer",
+    "iomegavmOSDiskName": "iomegavmOSDisk",
+    "iomegavmVmSize": "Standard_D2_v2",
+    "iomegavmVnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+    "iomegavmSubnetRef": "[concat(variables('iomegavmVnetID'), '/subnets/', variables('iomegavnetSubnet1Name'))]",
+    "iomegavmStorageAccountContainerName": "vhds",
+    "iomegavmNicName": "[concat(parameters('iomegavmName'), 'NetworkInterface')]"
+  },
+  "resources": [
+    {
+      "name": "[variables('iomegastorageName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('iomegastorageType')]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "iomegastorage"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "[parameters('vnetName')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "iomegavnet"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('iomegavnetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('iomegavnetSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('iomegavnetSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('iomegavnetSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('iomegavnetSubnet2Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('iomeganetworkinterfaceName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('iomegapublicipName'))]"
+      ],
+      "tags": {
+        "displayName": "iomeganetworkinterface"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('iomeganetworkinterfaceSubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('iomegapublicipName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('iomegapublicipName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "iomegapublicip"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('iomegapublicipDnsName')]"
+        }
+      }
+    },
+    {
+      "name": "[variables('iomegavmNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+      ],
+      "tags": {
+        "displayName": "iomegavmNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('iomegavmSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('iomegavmName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('iomegastorageName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('iomegavmNicName'))]"
+      ],
+      "tags": {
+        "displayName": "iomegavm"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('iomegavmVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('iomegavmName')]",
+          "adminUsername": "[parameters('iomegavmAdminUsername')]",
+          "adminPassword": "[parameters('iomegavmAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('iomegavmImagePublisher')]",
+            "offer": "[variables('iomegavmImageOffer')]",
+            "sku": "[parameters('iomegavmWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "iomegavmOSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('iomegastorageName')), '2016-01-01').primaryEndpoints.blob, variables('iomegavmStorageAccountContainerName'), '/', variables('iomegavmOSDiskName'), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('iomegavmNicName'))]"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
