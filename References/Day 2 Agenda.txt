@@ -1,0 +1,12 @@
+
+Day 2 Agenda
+
+	. Creating VMs with Availability Set | Load Balancer
+	. Custom Script Extension to Install IIS
+	. Using ARM Template to provision VM & Key Vault References
+	. Deploying a Web Application into App Services 
+		Traffic Management
+		CDN Profiles
+		Source Controls Deployment
+		App Settings
+	. 

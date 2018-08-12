@@ -1,0 +1,67 @@
+$resourceGroup = "myResourceGroupSecureWeb"
+$location = "East US"
+New-AzureRmResourceGroup -ResourceGroupName $resourceGroup -Location $location
+
+$keyvaultName="mykeyvault"
+New-AzureRmKeyVault -VaultName $keyvaultName `
+    -ResourceGroup $resourceGroup `
+    -Location $location `
+    -EnabledForDeployment
+	
+$policy = New-AzureKeyVaultCertificatePolicy `
+    -SubjectName "CN=www.contoso.com" `
+    -SecretContentType "application/x-pkcs12" `
+    -IssuerName Self `
+    -ValidityInMonths 12
+
+Add-AzureKeyVaultCertificate `
+    -VaultName $keyvaultName `
+    -Name "mycert" `
+    -CertificatePolicy $policy
+	
+$cred = Get-Credential
+
+New-AzureRmVm `
+    -ResourceGroupName $resourceGroup `
+    -Name "myVM" `
+    -Location $location `
+    -VirtualNetworkName "myVnet" `
+    -SubnetName "mySubnet" `
+    -SecurityGroupName "myNetworkSecurityGroup" `
+    -PublicIpAddressName "myPublicIpAddress" `
+    -Credential $cred `
+    -OpenPorts 443
+
+Set-AzureRmVMExtension -ResourceGroupName $resourceGroup `
+    -ExtensionName "IIS" `
+    -VMName "myVM" `
+    -Location $location `
+    -Publisher "Microsoft.Compute" `
+    -ExtensionType "CustomScriptExtension" `
+    -TypeHandlerVersion 1.8 `
+    -SettingString '{"commandToExecute":"powershell Add-WindowsFeature Web-Server -IncludeManagementTools"}'
+	
+$certURL=(Get-AzureKeyVaultSecret -VaultName $keyvaultName -Name "mycert").id
+$vm=Get-AzureRmVM -ResourceGroupName $resourceGroup -Name "myVM"
+$vaultId=(Get-AzureRmKeyVault -ResourceGroupName $resourceGroup -VaultName $keyVaultName).ResourceId
+$vm = Add-AzureRmVMSecret -VM $vm -SourceVaultId $vaultId -CertificateStore "My" -CertificateUrl $certURL
+
+Update-AzureRmVM -ResourceGroupName $resourceGroup -VM $vm
+
+$PublicSettings = '{
+    "fileUris":["https://raw.githubusercontent.com/Azure-Samples/compute-automation-configurations/master/secure-iis.ps1"],
+    "commandToExecute":"powershell -ExecutionPolicy Unrestricted -File secure-iis.ps1"
+}'
+
+Set-AzureRmVMExtension -ResourceGroupName $resourceGroup `
+    -ExtensionName "IIS" `
+    -VMName "myVM" `
+    -Location $location `
+    -Publisher "Microsoft.Compute" `
+    -ExtensionType "CustomScriptExtension" `
+    -TypeHandlerVersion 1.8 `
+    -SettingString $publicSettings
+	
+Get-AzureRmPublicIPAddress -ResourceGroupName $resourceGroup -Name "myPublicIPAddress" | select "IpAddress"
+	
+	

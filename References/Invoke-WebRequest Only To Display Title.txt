@@ -1,0 +1,4 @@
+ while($true) { 
+	$r = Invoke-WebRequest -Uri http://iomegalb.westeurope.cloudapp.azure.com -DisableKeepAlive -Method Get
+	Write-Output $r.ParsedHtml.title
+}
