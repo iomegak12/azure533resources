@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "ProvisioningVMResources", "ProvisioningVMResources\ProvisioningVMResources.deployproj", "{95CD4F95-1AC0-48BB-8D3C-01BA96BC3942}"
 EndProject
+Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "AzureResourceGroup1", "AzureResourceGroup1\AzureResourceGroup1.deployproj", "{AFE07FA3-01F6-4170-8B08-946370CAF4C6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{95CD4F95-1AC0-48BB-8D3C-01BA96BC3942}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{95CD4F95-1AC0-48BB-8D3C-01BA96BC3942}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{95CD4F95-1AC0-48BB-8D3C-01BA96BC3942}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFE07FA3-01F6-4170-8B08-946370CAF4C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFE07FA3-01F6-4170-8B08-946370CAF4C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFE07FA3-01F6-4170-8B08-946370CAF4C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFE07FA3-01F6-4170-8B08-946370CAF4C6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
