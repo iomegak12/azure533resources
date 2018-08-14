@@ -1,0 +1,1 @@
+get-azurermaduser | foreach { if($_.UserPrincipalName -ne "iomega.azure_gmail.com#EXT#iomegaazuregmail.onmicrosoft.com") { remove-azurermaduser -UPNOrObjecId $_.UserPrincipalName -force }}
